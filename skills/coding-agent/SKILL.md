@@ -273,6 +273,17 @@ When completely finished, run: openclaw system event --text \"Done: Built todos 
 
 This triggers an immediate wake event — Skippy gets pinged in seconds, not 10 minutes.
 
+> **Important:** For completion notifications to work, you must set `heartbeat.target: "last"` in your config. Without this, notifications are silently dropped (the default is `"none"`).
+
+Example config:
+
+```yaml
+heartbeat:
+  target: last
+```
+
+---
+
 ---
 
 ## Learnings (Jan 2026)
