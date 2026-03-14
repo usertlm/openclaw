@@ -114,6 +114,15 @@ function getErrorMessage(err: unknown): string {
   return String(err);
 }
 
+function isModuleNotFoundError(err: unknown): boolean {
+  const msg = getErrorMessage(err);
+  return (
+    msg.includes("Cannot find module") ||
+    msg.includes("ERR_MODULE_NOT_FOUND") ||
+    msg.includes("Failed to resolve import")
+  );
+}
+
 function resolveToolInputErrorStatus(err: unknown): number | null {
   if (err instanceof ToolInputError) {
     const status = (err as { status?: unknown }).status;
@@ -346,6 +355,18 @@ export async function handleToolsInvokeHttpRequest(
       sendJson(res, inputStatus, {
         ok: false,
         error: { type: "tool_error", message: getErrorMessage(err) || "invalid tool arguments" },
+      });
+      return true;
+    }
+    // Check if this is a module not found error (e.g., after OpenClaw update)
+    if (isModuleNotFoundError(err)) {
+      logWarn(`tools-invoke: module not found after update. Consider restarting Gateway: ${String(err)}`);
+      sendJson(res, 500, {
+        ok: false,
+        error: { 
+          type: "tool_error", 
+          message: "Tool module not found. This may happen after an OpenClaw update. Try restarting the Gateway: " + getErrorMessage(err).slice(0, 100)
+        },
       });
       return true;
     }
